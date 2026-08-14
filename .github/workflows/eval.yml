@@ -1,0 +1,50 @@
+name: LLM Gateway Eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      MODEL_BACKEND: hf_inference
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_MODEL_ID: Qwen/Qwen2.5-7B-Instruct
+      REQUIRE_AUTH: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install gateway deps
+        run: pip install -r gateway/requirements.txt
+
+      - name: Install eval deps
+        run: pip install -r eval/requirements.txt
+
+      - name: Start gateway
+        working-directory: gateway
+        run: |
+          nohup uvicorn main:app --host 0.0.0.0 --port 8000 &
+          sleep 3
+
+      - name: Run eval suite
+        working-directory: eval
+        run: python run_eval.py --gateway-url http://localhost:8000 --fail-under 0.8
+
+      - name: Run red-team suite
+        working-directory: redteam
+        run: python run_redteam.py --gateway-url http://localhost:8000
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: |
+            eval/eval_results.db
+            redteam/redteam_results.json
