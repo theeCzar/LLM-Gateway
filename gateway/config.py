@@ -31,7 +31,7 @@ class Settings:
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_MINUTES: int = int(os.getenv("JWT_EXPIRY_MINUTES", "60"))
     # If true, requests without a valid JWT are rejected. Turn off for local testing.
-    REQUIRE_AUTH: bool = _bool("REQUIRE_AUTH", "false")
+    REQUIRE_AUTH: bool = _bool("REQUIRE_AUTH", "true")
 
     # --- Rate limiting (token bucket) ---
     RATE_LIMIT_CAPACITY: int = int(os.getenv("RATE_LIMIT_CAPACITY", "20"))
